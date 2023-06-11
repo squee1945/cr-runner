@@ -14,6 +14,8 @@ const (
 )
 
 func main() {
+	log.SetFlags(0)
+
 	logInfo("Starting server...")
 	http.HandleFunc("/", handler)
 
@@ -33,8 +35,7 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logWarn("Bad method %v", r.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		clientError(w, "bad method %v", r.Method)
 		return
 	}
 
@@ -44,7 +45,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logInfo("Event received:\n%v\n", ev)
+	logInfo("Event received:\n%#v\n", ev)
+	logInfo("Headers:\n%v\n", r.Header.Values)
 }
 
 func logInfo(fmt string, args ...any) {
@@ -66,7 +68,7 @@ func serverError(w http.ResponseWriter, fmt string, args ...any) {
 }
 
 func clientError(w http.ResponseWriter, fmt string, args ...any) {
-	logInfo("Client error: "+fmt, args...)
+	logWarn("Client error: "+fmt, args...)
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte("Client error"))
 }
