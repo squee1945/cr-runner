@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/kr/pretty"
 )
 
 const (
@@ -45,8 +47,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logInfo("Event received:\n%#v\n", ev)
-	logInfo("Headers:\n%v\n", r.Header.Values)
+	pretty.Print(ev)
+	logInfo("Headers:\n%v\n", r.Header)
 }
 
 func logInfo(fmt string, args ...any) {
