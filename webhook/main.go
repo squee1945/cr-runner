@@ -11,10 +11,13 @@ import (
 )
 
 const (
-	eventHeader    = "X-GitHub-Event"
-	deliveryHeader = "X-GitHub-Delivery"
-	sigHeader      = "X-Hub-Signature"
-	sig256Header   = "X-Hub-Signature-256"
+	eventHeader      = "X-GitHub-Event"                         // X-Github-Event: workflow_job
+	deliveryHeader   = "X-GitHub-Delivery"                      // X-Github-Delivery: 2e4a3250-08a3-11ee-8cc8-00632da95790
+	hookIDHeader     = "X-Github-Hook-Id"                       // X-Github-Hook-Id: 419040544
+	targetIDHeader   = "X-Github-Hook-Installation-Target-Id"   // X-Github-Hook-Installation-Target-Id: 652279005
+	targetTypeHeader = "X-Github-Hook-Installation-Target-Type" // X-Github-Hook-Installation-Target-Type: repository
+	sigHeader        = "X-Hub-Signature"
+	sig256Header     = "X-Hub-Signature-256"
 )
 
 func main() {
@@ -49,7 +52,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pretty.Print(ev)
+	logInfo("Received event:\n%s\n", pretty.Sprint(ev))
 	logInfo("Headers:\n%v\n", r.Header)
 }
 

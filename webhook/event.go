@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 )
 
 const (
@@ -31,8 +32,13 @@ const (
 )
 
 func parseEvent(r io.Reader) (*event, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("reading all: %v", err)
+	}
+	logInfo("Raw event:\n%s\n", string(b))
 	var e event
-	if err := json.NewDecoder(r).Decode(&e); err != nil {
+	if err := json.Unmarshal(b, &e); err != nil {
 		return nil, fmt.Errorf("unmarshalling json: %v", err)
 	}
 	return &e, nil
