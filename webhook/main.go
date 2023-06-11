@@ -18,6 +18,9 @@ const (
 	targetTypeHeader = "X-Github-Hook-Installation-Target-Type" // X-Github-Hook-Installation-Target-Type: repository
 	sigHeader        = "X-Hub-Signature"
 	sig256Header     = "X-Hub-Signature-256"
+
+	eventWorkFlowJobHeader = "workflow_job"
+	hookIDEnvVar           = "HOOK_ID"
 )
 
 func main() {
@@ -44,6 +47,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		clientError(w, "bad method %v", r.Method)
 		return
+	}
+	if eh := r.Header.Get(eventHeader); eh != eventWorkFlowJobHeader {
+		clientError(w, "unexpected event type %q", eh)
+		return
+	}
+	if wantHookID, ok := os.LookupEnv(hookIDEnvVar); ok {
+		if eh := r.Header.Get(hookIDHeader); eh != wantHookID {
+			clientError(w, "incorrect %s got:%q want:%q", hookIDHeader, eh, wantHookID)
+			return
+		}
 	}
 
 	ev, err := parseEvent(r.Body)
