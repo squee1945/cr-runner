@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -51,18 +53,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	logInfo("Headers:\n%v\n", r.Header)
 }
 
-func logInfo(fmt string, args ...any) {
-	log.Printf("I "+fmt+"\n", args...)
-}
-
-func logWarn(fmt string, args ...any) {
-	log.Printf("W "+fmt+"\n", args...)
-}
-
-func logError(fmt string, args ...any) {
-	log.Printf("E "+fmt+"\n", args...)
-}
-
 func serverError(w http.ResponseWriter, fmt string, args ...any) {
 	logError("Error: "+fmt, args...)
 	w.WriteHeader(http.StatusInternalServerError)
@@ -73,4 +63,36 @@ func clientError(w http.ResponseWriter, fmt string, args ...any) {
 	logWarn("Client error: "+fmt, args...)
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte("Client error"))
+}
+
+func logInfo(template string, args ...any) {
+	logStructured("INFO", template, args...)
+}
+
+func logWarn(template string, args ...any) {
+	logStructured("WARN", template, args...)
+}
+
+func logError(template string, args ...any) {
+	logStructured("ERROR", template, args...)
+}
+
+type structuredLog struct {
+	Severity string `json:"severity"`
+	Message  string `json:"message"`
+}
+
+func logStructured(severity string, template string, args ...any) {
+	msg := fmt.Sprintf(template, args...)
+	sl := structuredLog{
+		Severity: severity,
+		Message:  msg,
+	}
+	content, err := json.Marshal(sl)
+	if err != nil {
+		fmt.Printf("Failed to log (message below): %v\n", err)
+		fmt.Println(msg)
+		return
+	}
+	fmt.Println(string(content))
 }
