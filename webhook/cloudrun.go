@@ -38,7 +38,6 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 						{
 							Name:  "job",
 							Image: j.config.runnerImageURL,
-							// ./config.sh --url https://github.com/octo-org --token example-token --ephemeral --disableupdate
 							// Command []string
 							Args: []string{
 								"./config.sh",

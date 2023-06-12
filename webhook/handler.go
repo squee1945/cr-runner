@@ -65,10 +65,10 @@ func (h handler) next() {
 	}
 
 	// Start Cloud Run Job.
-	// if err := h.startCRJob(ev); err != nil {
-	// 	h.serverError("creating Cloud Run job: %v", err)
-	// 	return
-	// }
+	if err := h.startCRJob(ev); err != nil {
+		h.serverError("creating Cloud Run job: %v", err)
+		return
+	}
 }
 
 func (h handler) startCRJob(ev *event) error {

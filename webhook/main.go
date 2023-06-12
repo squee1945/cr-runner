@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
-	defaultJobTimeout     = 60 * time.Minute
+	defaultJobTimeout     = 10 * time.Second
 	defaultJobCpu         = "1"
 	defaultJobMemory      = "512Mi"
 	defaultSecretName     = "github-actions-runner"
