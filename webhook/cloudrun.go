@@ -38,7 +38,6 @@ func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 			logInfo("Job %q is already created.", j.config.jobID)
 			return nil
 		}
-		logInfo("Error type %T", err)
 		return fmt.Errorf("creating job: %v", err)
 	}
 
@@ -109,6 +108,8 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 								"--token", "$" + gitHubTokenSecretEnvVar,
 								"--ephemeral",
 								"--disableupdate",
+								"&&",
+								"./run.sh",
 							},
 							Env: []*runpb.EnvVar{
 								{
