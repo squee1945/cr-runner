@@ -16,10 +16,14 @@ The following env vars must be configured on the Cloud Run service:
 - `$LOCATION` - The location for the Cloud Run service (e.g., "us-central1").
 - `$HOOK_ID` (optional) - The Hook ID for the webhook POSTing to the Cloud Run Service (e.g., "123456"); will only be validated if provided.
 - `$RUNNER_IMAGE_URL` - The Artifact Registry URL for the runner image (see below).
-- `$JOB_ID` (default "runner") - The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
+- `$JOB_ID` (default "gha-runner") - The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
 - `$JOB_TIMEOUT` (default "10m") - The allowed time for the action to execute.
 - `$JOB_CPU` (default "1") - The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
-- `$JOB_MEMORY` (default "512Mi") - The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
+- `$JOB_MEMORY` (default "1Gi") - The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
 - `$GITHUB_TOKEN_SECRET` - The name of a Secret Manager secret holding your GitHub Personal Access Token (see below). **DO NOT PUT THE TOKEN ITSELF IN THIS ENV VAR!**
 - `$REPOSITORY_URL` - The GitHub URL for the repository running actions (e.g., "https://github.com/joeschmoe/my-repo")
+
+## Setting up the $RUNNER_IMAGE_URL
+
+## Setting up the $GITHUB_TOKEN_SECRET
 

@@ -11,23 +11,6 @@ import (
 	"github.com/sethvargo/go-envconfig"
 )
 
-const (
-
-// defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
-// defaultJobTimeout     = 10 * time.Second
-// defaultJobCpu         = "1"
-// defaultJobMemory      = "512Mi"
-// defaultSecretName     = "github-actions-runner"
-
-// portEnvVar              = "PORT"
-// hookIDEnvVar            = "HOOK_ID"
-// runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
-// jobTimeoutEnvVar        = "JOB_TIMEOUT"
-// jobCpuEnvVar            = "JOB_CPU"
-// jobMemoryEnvVar         = "JOB_MEMORY"
-// gitHubTokenSecretEnvVar = "GITHUB_TOKEN_SECRET"
-)
-
 func main() {
 	log.SetFlags(0)
 
@@ -60,10 +43,10 @@ type config struct {
 	Location          string        `env:"LOCATION,required"`
 	HookID            string        `env:"HOOK_ID"` // Will validate against GitHub header, if provided.
 	RunnerImageURL    string        `env:"RUNNER_IMAGE_URL,required"`
-	JobID             string        `env:"JOB_ID,default=runner"`
+	JobID             string        `env:"JOB_ID,default=gha-runner"`
 	JobTimeout        time.Duration `env:"JOB_TIMEOUT,default=10m"`
 	JobCpu            string        `env:"JOB_CPU,default=1"`
-	JobMemory         string        `env:"JOB_MEMORY,default=512Mi"`
+	JobMemory         string        `env:"JOB_MEMORY,default=1Gi"`
 	TokenSecretName   string        `env:"GITHUB_TOKEN_SECRET,required"` // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
 	RepositoryHtmlURL string        `env:"REPOSITORY_URL,required"`
 }
@@ -74,40 +57,7 @@ func newConfig(ctx context.Context) (config, error) {
 	if err := envconfig.Process(ctx, &c); err != nil {
 		return config{}, fmt.Errorf("processing envconfig: %v", err)
 	}
-	c.JobID += "j"
-	// if c.RepositoryHtmlURL == "" {
-	// 	c.RepositoryHtmlURL = "https://github.com/squee1945/self-hosted-runner" // TODO
-	// }
-	// c.JobID = "github-runner-" + jobVersion // TODO
-	// c := config{
-	// 	port:              "8080",
-	// 	wantHookID:        os.Getenv(hookIDEnvVar),
-	// 	jobID:             "github-runner-" + jobVersion,
-	// 	runnerImageURL:    defaultRunnerImageURL,
-	// 	project:           "cr-runner-jasonco", // TODO
-	// 	location:          "us-central1",       // TODO
-	// 	jobTimeout:        defaultJobTimeout,
-	// 	jobCpu:            defaultJobCpu,    // TODO
-	// 	jobMemory:         defaultJobMemory, // TODO
-	// 	tokenSecretName:   defaultSecretName,
-	// 	repositoryHtmlURL: "https://github.com/squee1945/self-hosted-runner", // TODO
-	// }
-	// if p, ok := os.LookupEnv(portEnvVar); ok {
-	// 	c.port = p
-	// }
-	// if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); ok {
-	// 	c.tokenSecretName = sn
-	// }
-	// if ts, ok := os.LookupEnv(jobTimeoutEnvVar); ok {
-	// 	var err error
-	// 	c.jobTimeout, err = time.ParseDuration(ts)
-	// 	if err != nil {
-	// 		return config{}, fmt.Errorf("parsing %s=%q: %v", jobTimeoutEnvVar, ts, err)
-	// 	}
-	// }
-	// if url, ok := os.LookupEnv(runnerImageURLEnvVar); ok {
-	// 	c.runnerImageURL = url
-	// }
+	c.JobID += "k" // TODO: remove me after testing.
 	logInfo("Config: %#v", c)
 	return c, nil
 }
