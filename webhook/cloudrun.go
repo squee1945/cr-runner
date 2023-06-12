@@ -119,7 +119,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							Args: []string{
 								"/bin/bash",
 								"-c",
-								fmt.Sprintf("./config.sh --check --url %q --pat $%s", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+								fmt.Sprintf("./config.sh --check --url %q --pat $%s && cat /home/runner/_diag/*.log", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
 							},
 							// Args: []string{
 							// 	"/bin/bash",
