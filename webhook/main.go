@@ -74,7 +74,7 @@ func newConfig(ctx context.Context) (config, error) {
 	if err := envconfig.Process(ctx, &c); err != nil {
 		return config{}, fmt.Errorf("processing envconfig: %v", err)
 	}
-	c.JobID += "f"
+	c.JobID += "g"
 	// if c.RepositoryHtmlURL == "" {
 	// 	c.RepositoryHtmlURL = "https://github.com/squee1945/self-hosted-runner" // TODO
 	// }
