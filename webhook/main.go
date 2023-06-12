@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	jobVersion = "1" // TODO - from env var
+	jobVersion = "2" // TODO - from env var
 
 	defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
 	defaultJobTimeout     = 10 * time.Second
