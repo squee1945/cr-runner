@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultRunnerImageURL = "gcr.io/cr-runner-jasonco/actions-runner"
+	defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
 	defaultJobTimeout     = 60 * time.Minute
 	defaultJobCpu         = "1"
 	defaultJobMemory      = "512Mi"
@@ -85,5 +85,6 @@ func newConfig() (config, error) {
 	if url, ok := os.LookupEnv(runnerImageURLEnvVar); ok {
 		c.runnerImageURL = url
 	}
+	logInfo("Config: %#v", c)
 	return c, nil
 }
