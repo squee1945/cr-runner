@@ -14,7 +14,7 @@ type cloudRunJob struct {
 }
 
 func (j *cloudRunJob) jobID() string {
-	return strconv.Itoa(j.ev.WorkflowJob.ID)
+	return "jobid-" + strconv.Itoa(j.ev.WorkflowJob.ID)
 }
 
 func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
