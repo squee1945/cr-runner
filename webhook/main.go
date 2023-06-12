@@ -12,21 +12,20 @@ import (
 )
 
 const (
-	jobVersion = "2" // TODO - from env var
 
-	defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
-	defaultJobTimeout     = 10 * time.Second
-	defaultJobCpu         = "1"
-	defaultJobMemory      = "512Mi"
-	defaultSecretName     = "github-actions-runner"
+// defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
+// defaultJobTimeout     = 10 * time.Second
+// defaultJobCpu         = "1"
+// defaultJobMemory      = "512Mi"
+// defaultSecretName     = "github-actions-runner"
 
-	portEnvVar              = "PORT"
-	hookIDEnvVar            = "HOOK_ID"
-	runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
-	jobTimeoutEnvVar        = "JOB_TIMEOUT"
-	jobCpuEnvVar            = "JOB_CPU"
-	jobMemoryEnvVar         = "JOB_MEMORY"
-	gitHubTokenSecretEnvVar = "GITHUB_TOKEN_SECRET"
+// portEnvVar              = "PORT"
+// hookIDEnvVar            = "HOOK_ID"
+// runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
+// jobTimeoutEnvVar        = "JOB_TIMEOUT"
+// jobCpuEnvVar            = "JOB_CPU"
+// jobMemoryEnvVar         = "JOB_MEMORY"
+// gitHubTokenSecretEnvVar = "GITHUB_TOKEN_SECRET"
 )
 
 func main() {
@@ -75,6 +74,7 @@ func newConfig(ctx context.Context) (config, error) {
 	if err := envconfig.Process(ctx, &c); err != nil {
 		return config{}, fmt.Errorf("processing envconfig: %v", err)
 	}
+	c.JobID += "a"
 	// if c.RepositoryHtmlURL == "" {
 	// 	c.RepositoryHtmlURL = "https://github.com/squee1945/self-hosted-runner" // TODO
 	// }

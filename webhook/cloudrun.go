@@ -13,6 +13,10 @@ import (
 	run "cloud.google.com/go/run/apiv2"
 )
 
+const (
+	tokenSecretEnvVar = "TOKEN_SECRET_NAME"
+)
+
 type cloudRunJob struct {
 	config config
 }
@@ -102,18 +106,24 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							Name:  "job",
 							Image: j.config.RunnerImageURL,
 							// Command []string
+							// Args: []string{
+							// 	"./config.sh",
+							// 	"--url", j.config.RepositoryHtmlURL,
+							// 	"--token", "$" + tokenSecretEnvVar,
+							// 	"--ephemeral",
+							// 	"--disableupdate",
+							// 	"&&",
+							// 	"./run.sh",
+							// },
 							Args: []string{
-								"./config.sh",
-								"--url", j.config.RepositoryHtmlURL,
-								"--token", "$" + gitHubTokenSecretEnvVar,
-								"--ephemeral",
-								"--disableupdate",
-								"&&",
 								"./run.sh",
+								"--check",
+								"--url", j.config.RepositoryHtmlURL,
+								"--pat", "$" + tokenSecretEnvVar,
 							},
 							Env: []*runpb.EnvVar{
 								{
-									Name: gitHubTokenSecretEnvVar,
+									Name: tokenSecretEnvVar,
 									Values: &runpb.EnvVar_ValueSource{
 										ValueSource: &runpb.EnvVarSource{
 											SecretKeyRef: &runpb.SecretKeySelector{
