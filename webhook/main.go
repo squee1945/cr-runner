@@ -44,7 +44,7 @@ type config struct {
 	Port              string        `env:"PORT,default=8080"`
 	HookID            string        `env:"HOOK_ID"` // Will validate against GitHub header, if provided.
 	RunnerImageURL    string        `env:"RUNNER_IMAGE_URL,required"`
-	JobID             string        `env:"JOB_ID,default=gha-runner"`
+	JobID             string        `env:"JOB_ID,default=runner"`
 	JobTimeout        time.Duration `env:"JOB_TIMEOUT,default=10m"`
 	JobCpu            string        `env:"JOB_CPU,default=1"`
 	JobMemory         string        `env:"JOB_MEMORY,default=1Gi"`
