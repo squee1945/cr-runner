@@ -122,6 +122,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							// 	"--pat", "$" + tokenSecretEnvVar,
 							// },
 							Args: []string{
+								"/bin/bash",
 								"-c",
 								`echo "config.sh --help" && ./config.sh --help && echo "run.sh --help" && ./run.sh --help && echo "Token $TOKEN_SECRET"`,
 							},
