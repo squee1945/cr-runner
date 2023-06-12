@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	tokenSecretEnvVar = "TOKEN_SECRET_NAME"
+	tokenSecretEnvVar = "TOKEN_SECRET"
 )
 
 type cloudRunJob struct {
@@ -115,11 +115,15 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							// 	"&&",
 							// 	"./run.sh",
 							// },
+							// Args: []string{
+							// 	"./run.sh",
+							// 	"--check",
+							// 	"--url", j.config.RepositoryHtmlURL,
+							// 	"--pat", "$" + tokenSecretEnvVar,
+							// },
 							Args: []string{
-								"./run.sh",
-								"--check",
-								"--url", j.config.RepositoryHtmlURL,
-								"--pat", "$" + tokenSecretEnvVar,
+								"-c",
+								`echo "config.sh --help" && ./config.sh --help && echo "run.sh --help" && ./run.sh --help && echo "Token $TOKEN_SECRET"`,
 							},
 							Env: []*runpb.EnvVar{
 								{
@@ -133,12 +137,12 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 										},
 									},
 								},
-								{
-									Name: "MY_PLAINTEXT",
-									Values: &runpb.EnvVar_Value{
-										Value: "the-value",
-									},
-								},
+								// {
+								// 	Name: "MY_PLAINTEXT",
+								// 	Values: &runpb.EnvVar_Value{
+								// 		Value: "the-value",
+								// 	},
+								// },
 							},
 							Resources: &runpb.ResourceRequirements{
 								Limits:          map[string]string{"cpu": j.config.JobCpu, "memory": j.config.JobMemory},
