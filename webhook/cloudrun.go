@@ -116,14 +116,19 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							// 	"&&",
 							// 	"./run.sh",
 							// },
+							Args: []string{
+								"/bin/bash",
+								"-c",
+								fmt.Sprintf(`./config.sh --unattended --disableupdate --ephemeral --url %q --pat $%s && ./run.sh`, j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+							},
 							// Args: []string{
 							// 	"/bin/bash",
 							// 	"-c",
-							// 	fmt.Sprintf("./config.sh --check --url %q --pat $%s && cat /home/runner/_diag/*.log", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+							// 	fmt.Sprintf("./config.sh --check --unattended --disableupdate --url %q --pat $%s && cat /home/runner/_diag/*.log", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
 							// },
-							Args: []string{
-								"nslookup", "www.google.com",
-							},
+							// Args: []string{
+							// 	"curl", "www.google.com",
+							// },
 							// Args: []string{
 							// 	"/bin/bash",
 							// 	"-c",
