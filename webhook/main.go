@@ -13,6 +13,7 @@ const (
 	defaultJobTimeout     = 60 * time.Minute
 	defaultJobCpu         = "1"
 	defaultJobMemory      = "512Mi"
+	defaultSecretName     = "github-actions-runner"
 
 	hookIDEnvVar            = "HOOK_ID"
 	runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
@@ -62,17 +63,16 @@ type config struct {
 func newConfig() (config, error) {
 	fmt.Printf("ENV VARS:\n%q\n", os.Environ())
 	c := config{
-		wantHookID:     os.Getenv(hookIDEnvVar),
-		runnerImageURL: defaultRunnerImageURL,
-		project:        "TODO",
-		location:       "TODO",
-		jobTimeout:     defaultJobTimeout,
-		jobCpu:         defaultJobCpu,    // TODO
-		jobMemory:      defaultJobMemory, // TODO
+		wantHookID:      os.Getenv(hookIDEnvVar),
+		runnerImageURL:  defaultRunnerImageURL,
+		project:         "cr-runner-jasonco", // TODO
+		location:        "us-central1",       // TODO
+		jobTimeout:      defaultJobTimeout,
+		jobCpu:          defaultJobCpu,    // TODO
+		jobMemory:       defaultJobMemory, // TODO
+		tokenSecretName: defaultSecretName,
 	}
-	if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); !ok {
-		return config{}, fmt.Errorf("$%s is required", gitHubTokenSecretEnvVar)
-	} else {
+	if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); ok {
 		c.tokenSecretName = sn
 	}
 	if ts, ok := os.LookupEnv(jobTimeoutEnvVar); ok {
