@@ -112,13 +112,14 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							// 	"--token", "$" + tokenSecretEnvVar,
 							// 	"--ephemeral",
 							// 	"--disableupdate",
+							//  "--unattended",
 							// 	"&&",
 							// 	"./run.sh",
 							// },
 							Args: []string{
 								"/bin/bash",
 								"-c",
-								fmt.Sprintf("./run.sh --check --url %q --pat $%s", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+								fmt.Sprintf("./config.sh --check --url %q --pat $%s", j.config.RepositoryHtmlURL, tokenSecretEnvVar),
 							},
 							// Args: []string{
 							// 	"/bin/bash",
