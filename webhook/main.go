@@ -60,8 +60,8 @@ type config struct {
 	Location          string        `env:"LOCATION,required"`
 	HookID            string        `env:"HOOK_ID"` // Will validate against GitHub header, if provided.
 	RunnerImageURL    string        `env:"RUNNER_IMAGE_URL,required"`
-	JobID             string        `env:"JOB_ID,required"`
-	JobTimeout        time.Duration `env:"JOB_TIMEOUT,default=30s"`
+	JobID             string        `env:"JOB_ID,default=runner"`
+	JobTimeout        time.Duration `env:"JOB_TIMEOUT,default=10m"`
 	JobCpu            string        `env:"JOB_CPU,default=1"`
 	JobMemory         string        `env:"JOB_MEMORY,default=512Mi"`
 	TokenSecretName   string        `env:"GITHUB_TOKEN_SECRET,required"` // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
@@ -74,7 +74,7 @@ func newConfig(ctx context.Context) (config, error) {
 	if err := envconfig.Process(ctx, &c); err != nil {
 		return config{}, fmt.Errorf("processing envconfig: %v", err)
 	}
-	c.JobID += "i"
+	c.JobID += "j"
 	// if c.RepositoryHtmlURL == "" {
 	// 	c.RepositoryHtmlURL = "https://github.com/squee1945/self-hosted-runner" // TODO
 	// }
