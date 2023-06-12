@@ -45,13 +45,13 @@ func (h handler) next() {
 		return
 	}
 
-	logInfo("Received event:\n%s\n", pretty.Sprint(ev))
-	logInfo("Headers:\n%v\n", h.r.Header)
-
 	if ev.Action != actionQueued {
 		logInfo("Event action %q not %q. Ignoring.", ev.Action, actionQueued)
 		return
 	}
+
+	logInfo("Processing event:\n%s\n", pretty.Sprint(ev))
+	// logInfo("Headers:\n%v\n", h.r.Header)
 
 	crJob := cloudRunJob{config: h.config}
 	if err := crJob.runJob(h.r.Context(), ev); err != nil {
