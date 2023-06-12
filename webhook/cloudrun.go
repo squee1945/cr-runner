@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cloud.google.com/go/run/apiv2/runpb"
+	"github.com/googleapis/gax-go/v2/apierror"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	run "cloud.google.com/go/run/apiv2"
@@ -13,10 +16,6 @@ import (
 type cloudRunJob struct {
 	config config
 }
-
-// func (j *cloudRunJob) jobID() string {
-// 	return "jobid-" + strconv.Itoa(j.ev.WorkflowJob.ID)
-// }
 
 func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 	c, err := run.NewJobsClient(ctx)
@@ -33,13 +32,18 @@ func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 
 	op, err := c.CreateJob(ctx, req)
 	if err != nil {
-		// TODO: maybe the uniqueness check fails here.
+		// If we already have a job by this name, we're done.
+		var aerr *apierror.APIError
+		if errors.As(err, &aerr) && aerr.GRPCStatus().Code() == codes.AlreadyExists {
+			logInfo("Job %q is already created.", j.config.jobID)
+			return nil
+		}
+		logInfo("Error type %T", err)
 		return fmt.Errorf("creating job: %v", err)
 	}
 
 	resp, err := op.Wait(ctx)
 	if err != nil {
-		// TODO: if something else has already created this job, it's fine.
 		return fmt.Errorf("waiting for job operation: %v", err)
 	}
 

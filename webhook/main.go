@@ -18,6 +18,7 @@ const (
 	defaultJobMemory      = "512Mi"
 	defaultSecretName     = "github-actions-runner"
 
+	portEnvVar              = "PORT"
 	hookIDEnvVar            = "HOOK_ID"
 	runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
 	jobTimeoutEnvVar        = "JOB_TIMEOUT"
@@ -30,12 +31,6 @@ func main() {
 	log.SetFlags(0)
 
 	logInfo("Starting server...")
-
-	// Determine port for HTTP service.
-	port := "8080"
-	if p, ok := os.LookupEnv("PORT"); ok {
-		port = p
-	}
 
 	config, err := newConfig()
 	if err != nil {
@@ -52,13 +47,14 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handler{w: w, r: r, config: config}.next()
 	})
-	logInfo("Listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	logInfo("Listening on port %s", config.port)
+	if err := http.ListenAndServe(":"+config.port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
 
 type config struct {
+	port              string
 	project           string
 	location          string
 	wantHookID        string
@@ -74,6 +70,7 @@ type config struct {
 func newConfig() (config, error) {
 	fmt.Printf("ENV VARS:\n%q\n", os.Environ())
 	c := config{
+		port:              "8080",
 		wantHookID:        os.Getenv(hookIDEnvVar),
 		jobID:             "github-runner-" + jobVersion,
 		runnerImageURL:    defaultRunnerImageURL,
@@ -84,6 +81,9 @@ func newConfig() (config, error) {
 		jobMemory:         defaultJobMemory, // TODO
 		tokenSecretName:   defaultSecretName,
 		repositoryHtmlURL: "https://github.com/squee1945/self-hosted-runner", // TODO
+	}
+	if p, ok := os.LookupEnv(portEnvVar); ok {
+		c.port = p
 	}
 	if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); ok {
 		c.tokenSecretName = sn
