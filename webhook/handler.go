@@ -18,14 +18,6 @@ const (
 	eventWorkFlowJobHeader = "workflow_job"
 )
 
-// type server struct {}
-
-// func (s server) handler(config config) func (http.ResponseWriter,  *http.Request){
-// 	return func (w http.ResponseWriter, r *http.Request) {
-// 		handler{w: w, r: r, config: config}.next()
-// 	}
-// }
-
 type handler struct {
 	w      http.ResponseWriter
 	r      *http.Request
@@ -41,8 +33,8 @@ func (h handler) next() {
 		h.clientError("unexpected event type %q", eh)
 		return
 	}
-	if eh := h.r.Header.Get(hookIDHeader); h.config.wantHookID != "" && eh != h.config.wantHookID {
-		h.clientError("incorrect %s got:%q want:%q", hookIDHeader, eh, h.config.wantHookID)
+	if eh := h.r.Header.Get(hookIDHeader); h.config.HookID != "" && eh != h.config.HookID {
+		h.clientError("incorrect %s got:%q want:%q", hookIDHeader, eh, h.config.HookID)
 		return
 	}
 	// TODO: Check signatures.
@@ -63,43 +55,10 @@ func (h handler) next() {
 
 	crJob := cloudRunJob{config: h.config}
 	if err := crJob.runJob(h.r.Context(), ev); err != nil {
-		h.serverError("running job %q: %v", h.config.jobID, err)
+		h.serverError("running job %q: %v", h.config.JobID, err)
 		return
 	}
 }
-
-// func (h handler) startCRJob(ev *event) error {
-// 	// This snippet has been automatically generated and should be regarded as a code template only.
-// 	// It will require modifications to work:
-// 	// - It may require correct/in-range values for request initialization.
-// 	// - It may require specifying regional endpoints when creating the service client as shown in:
-// 	//   https://pkg.go.dev/cloud.google.com/go#hdr-Client_Options
-// 	ctx := h.r.Context()
-// 	c, err := run.NewJobsClient(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("creating Cloud Run client: %v", err)
-// 	}
-// 	defer c.Close()
-
-// 	crJob := cloudRunJob{ev: ev, config: h.config}
-// 	req, err := crJob.createJobRequest()
-// 	if err != nil {
-// 		return fmt.Errorf("creating job request: %v", err)
-// 	}
-
-// 	op, err := c.CreateJob(ctx, req)
-// 	if err != nil {
-// 		return fmt.Errorf("creating Cloud Run job: %v", err)
-// 	}
-
-// 	resp, err := op.Wait(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("waiting for Cloud Run operation: %v", err)
-// 	}
-
-// 	logInfo("Cloud Run Job API response for %q: %#v", crJob.jobID(), resp)
-// 	return nil
-// }
 
 func (h handler) serverError(template string, args ...any) {
 	logError("Error: "+template, args...)

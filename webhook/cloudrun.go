@@ -35,7 +35,7 @@ func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 		// If we already have a job by this name, we're done.
 		var aerr *apierror.APIError
 		if errors.As(err, &aerr) && aerr.GRPCStatus().Code() == codes.AlreadyExists {
-			logInfo("Job %q is already created.", j.config.jobID)
+			logInfo("Job %q is already created.", j.config.JobID)
 			return nil
 		}
 		return fmt.Errorf("creating job: %v", err)
@@ -46,7 +46,7 @@ func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 		return fmt.Errorf("waiting for job operation: %v", err)
 	}
 
-	logInfo("Job creation response for %q: %#v", j.config.jobID, resp)
+	logInfo("Job creation response for %q: %#v", j.config.JobID, resp)
 	return nil
 }
 
@@ -77,7 +77,7 @@ func (j *cloudRunJob) runJob(ctx context.Context, ev *event) error {
 		return fmt.Errorf("waiting for job operation: %v", err)
 	}
 
-	logInfo("Job run response for %q: %#v", j.config.jobID, resp)
+	logInfo("Job run response for %q: %#v", j.config.JobID, resp)
 	return nil
 }
 
@@ -85,8 +85,8 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 	req := &runpb.CreateJobRequest{
 		// TODO: Fill request struct fields.
 		// See https://pkg.go.dev/cloud.google.com/go/run/apiv2/runpb#CreateJobRequest.
-		Parent: fmt.Sprintf("projects/%s/locations/%s", j.config.project, j.config.location),
-		JobId:  j.config.jobID,
+		Parent: fmt.Sprintf("projects/%s/locations/%s", j.config.Project, j.config.Location),
+		JobId:  j.config.JobID,
 		Job: &runpb.Job{
 			// Labels map[string]string, // TODO
 			// Annotations map[string]string // TODO
@@ -100,11 +100,11 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 					Containers: []*runpb.Container{
 						{
 							Name:  "job",
-							Image: j.config.runnerImageURL,
+							Image: j.config.RunnerImageURL,
 							// Command []string
 							Args: []string{
 								"./config.sh",
-								"--url", j.config.repositoryHtmlURL,
+								"--url", j.config.RepositoryHtmlURL,
 								"--token", "$" + gitHubTokenSecretEnvVar,
 								"--ephemeral",
 								"--disableupdate",
@@ -117,7 +117,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 									Values: &runpb.EnvVar_ValueSource{
 										ValueSource: &runpb.EnvVarSource{
 											SecretKeyRef: &runpb.SecretKeySelector{
-												Secret:  j.config.tokenSecretName,
+												Secret:  j.config.TokenSecretName,
 												Version: "latest",
 											},
 										},
@@ -131,7 +131,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 								},
 							},
 							Resources: &runpb.ResourceRequirements{
-								Limits:          map[string]string{"cpu": j.config.jobCpu, "memory": j.config.jobMemory},
+								Limits:          map[string]string{"cpu": j.config.JobCpu, "memory": j.config.JobMemory},
 								CpuIdle:         false,
 								StartupCpuBoost: true,
 							},
@@ -146,7 +146,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 					Retries: &runpb.TaskTemplate_MaxRetries{
 						MaxRetries: 0,
 					},
-					Timeout:              durationpb.New(j.config.jobTimeout),
+					Timeout:              durationpb.New(j.config.JobTimeout),
 					ExecutionEnvironment: runpb.ExecutionEnvironment_EXECUTION_ENVIRONMENT_GEN2,
 					// ServiceAccount,
 					// EncryptionKey
@@ -162,6 +162,6 @@ func (j *cloudRunJob) runJobRequest(ev *event) (*runpb.RunJobRequest, error) {
 	return &runpb.RunJobRequest{
 		// TODO: Fill request struct fields.
 		// See https://pkg.go.dev/cloud.google.com/go/run/apiv2/runpb#RunJobRequest.
-		Name: fmt.Sprintf("projects/%s/locations/%s/jobs/%s", j.config.project, j.config.location, j.config.jobID),
+		Name: fmt.Sprintf("projects/%s/locations/%s/jobs/%s", j.config.Project, j.config.Location, j.config.JobID),
 	}, nil
 }
