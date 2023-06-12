@@ -143,6 +143,7 @@ type eventRepository struct {
 	NodeID   string `json:"node_id"`   // "node_id": "MDEwOlJlcG9zaXRvcnkxMjk2MjY5",
 	Name     string `json:"name"`      // "name": "Hello-World",
 	FullName string `json:"full_name"` // "full_name": "octocat/Hello-World",
+	HtmlURL  string `json:"html_url"`  // "html_url": "https://github.com/squee1945/self-hosted-runner"
 }
 
 // https://docs.github.com/en/rest/orgs/orgs?apiVersion=2022-11-28#get-an-organization
@@ -208,6 +209,18 @@ type eventWorkflowJob struct {
 }
 
 // https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads?actionType=waiting#workflow_job
+/*
+{
+	{CompletedAt:"2023-06-11T22:34:45.000Z", Conclusion:"success", Name:"Set up job", Number:1, StartedAt:"2023-06-11T22:34:43.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:46.000Z", Conclusion:"success", Name:"Run actions/checkout@v3", Number:2, StartedAt:"2023-06-11T22:34:45.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:53.000Z", Conclusion:"success", Name:"Set up Go", Number:3, StartedAt:"2023-06-11T22:34:47.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:54.000Z", Conclusion:"success", Name:"Build", Number:4, StartedAt:"2023-06-11T22:34:53.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:55.000Z", Conclusion:"success", Name:"Test", Number:5, StartedAt:"2023-06-11T22:34:54.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:56.000Z", Conclusion:"success", Name:"Post Set up Go", Number:9, StartedAt:"2023-06-11T22:34:56.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:56.000Z", Conclusion:"success", Name:"Post Run actions/checkout@v3", Number:10, StartedAt:"2023-06-11T22:34:56.000Z", Status:"completed"},
+	{CompletedAt:"2023-06-11T22:34:56.000Z", Conclusion:"success", Name:"Complete job", Number:11, StartedAt:"2023-06-11T22:34:55.000Z", Status:"completed"},
+}
+*/
 type eventWorkflowStep struct {
 	CompletedAt string `json:"completed_at"`
 	Conclusion  string `json:"conclusion"` // One of: failure, skipped, success, cancelled, null

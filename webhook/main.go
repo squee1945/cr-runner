@@ -1,40 +1,45 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/kr/pretty"
+	"time"
 )
 
 const (
-	eventHeader      = "X-GitHub-Event"                         // X-Github-Event: workflow_job
-	deliveryHeader   = "X-GitHub-Delivery"                      // X-Github-Delivery: 2e4a3250-08a3-11ee-8cc8-00632da95790
-	hookIDHeader     = "X-Github-Hook-Id"                       // X-Github-Hook-Id: 419040544
-	targetIDHeader   = "X-Github-Hook-Installation-Target-Id"   // X-Github-Hook-Installation-Target-Id: 652279005
-	targetTypeHeader = "X-Github-Hook-Installation-Target-Type" // X-Github-Hook-Installation-Target-Type: repository
-	sigHeader        = "X-Hub-Signature"
-	sig256Header     = "X-Hub-Signature-256"
+	defaultRunnerImageURL = "gcr.io/cr-runner-jasonco/actions-runner"
+	defaultJobTimeout     = 60 * time.Minute
+	defaultJobCpu         = "1"
+	defaultJobMemory      = "512Mi"
 
-	eventWorkFlowJobHeader = "workflow_job"
-	hookIDEnvVar           = "HOOK_ID"
+	hookIDEnvVar            = "HOOK_ID"
+	runnerImageURLEnvVar    = "RUNNER_IMAGE_URL"
+	jobTimeoutEnvVar        = "JOB_TIMEOUT"
+	jobCpuEnvVar            = "JOB_CPU"
+	jobMemoryEnvVar         = "JOB_MEMORY"
+	gitHubTokenSecretEnvVar = "GITHUB_TOKEN_SECRET"
 )
 
 func main() {
 	log.SetFlags(0)
 
 	logInfo("Starting server...")
-	http.HandleFunc("/", handler)
 
 	// Determine port for HTTP service.
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		logInfo("Defaulting to port %s", port)
+	port := "8080"
+	if p, ok := os.LookupEnv("PORT"); ok {
+		port = p
 	}
+
+	config, err := newConfig()
+	if err != nil {
+		log.Fatalf("Bad config: %v", err)
+	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		handler{w: w, r: r, config: config}.next()
+	})
 
 	// Start HTTP server.
 	logInfo("Listening on port %s", port)
@@ -43,72 +48,42 @@ func main() {
 	}
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		clientError(w, "bad method %v", r.Method)
-		return
+type config struct {
+	project         string
+	location        string
+	wantHookID      string
+	runnerImageURL  string
+	jobTimeout      time.Duration
+	jobCpu          string
+	jobMemory       string
+	tokenSecretName string // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
+}
+
+func newConfig() (config, error) {
+	fmt.Printf("ENV VARS:\n%q\n", os.Environ())
+	c := config{
+		wantHookID:     os.Getenv(hookIDEnvVar),
+		runnerImageURL: defaultRunnerImageURL,
+		project:        "TODO",
+		location:       "TODO",
+		jobTimeout:     defaultJobTimeout,
+		jobCpu:         defaultJobCpu,    // TODO
+		jobMemory:      defaultJobMemory, // TODO
 	}
-	if eh := r.Header.Get(eventHeader); eh != eventWorkFlowJobHeader {
-		clientError(w, "unexpected event type %q", eh)
-		return
+	if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); !ok {
+		return config{}, fmt.Errorf("$%s is required", gitHubTokenSecretEnvVar)
+	} else {
+		c.tokenSecretName = sn
 	}
-	if wantHookID, ok := os.LookupEnv(hookIDEnvVar); ok {
-		if eh := r.Header.Get(hookIDHeader); eh != wantHookID {
-			clientError(w, "incorrect %s got:%q want:%q", hookIDHeader, eh, wantHookID)
-			return
+	if ts, ok := os.LookupEnv(jobTimeoutEnvVar); ok {
+		var err error
+		c.jobTimeout, err = time.ParseDuration(ts)
+		if err != nil {
+			return config{}, fmt.Errorf("parsing %s=%q: %v", jobTimeoutEnvVar, ts, err)
 		}
 	}
-
-	ev, err := parseEvent(r.Body)
-	if err != nil {
-		serverError(w, "parsing event: %v", err)
-		return
+	if url, ok := os.LookupEnv(runnerImageURLEnvVar); ok {
+		c.runnerImageURL = url
 	}
-
-	logInfo("Received event:\n%s\n", pretty.Sprint(ev))
-	logInfo("Headers:\n%v\n", r.Header)
-}
-
-func serverError(w http.ResponseWriter, fmt string, args ...any) {
-	logError("Error: "+fmt, args...)
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("Server error"))
-}
-
-func clientError(w http.ResponseWriter, fmt string, args ...any) {
-	logWarn("Client error: "+fmt, args...)
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte("Client error"))
-}
-
-func logInfo(template string, args ...any) {
-	logStructured("INFO", template, args...)
-}
-
-func logWarn(template string, args ...any) {
-	logStructured("WARN", template, args...)
-}
-
-func logError(template string, args ...any) {
-	logStructured("ERROR", template, args...)
-}
-
-type structuredLog struct {
-	Severity string `json:"severity"`
-	Message  string `json:"message"`
-}
-
-func logStructured(severity string, template string, args ...any) {
-	msg := fmt.Sprintf(template, args...)
-	sl := structuredLog{
-		Severity: severity,
-		Message:  msg,
-	}
-	content, err := json.Marshal(sl)
-	if err != nil {
-		fmt.Printf("Failed to log (message below): %v\n", err)
-		fmt.Println(msg)
-		return
-	}
-	fmt.Println(string(content))
+	return c, nil
 }
