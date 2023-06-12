@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 )
 
 const (
+	jobVersion = "1" // TODO - from env var
+
 	defaultRunnerImageURL = "us-central1-docker.pkg.dev/cr-runner-jasonco/github-actions-runner/image@sha256:8c87e13c36ca3d2d3703bde6a06979bf2daba47b963edbff281cfd4cd468375b"
 	defaultJobTimeout     = 10 * time.Second
 	defaultJobCpu         = "1"
@@ -38,11 +41,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("Bad config: %v", err)
 	}
+
+	// Ensure we have the Cloud Run Job created.
+	job := cloudRunJob{config: config}
+	if err := job.ensureJob(context.Background()); err != nil {
+		log.Fatalf("Failed to create Cloud Run job %q: %v", config.jobID, err)
+	}
+
+	// Start HTTP server.
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handler{w: w, r: r, config: config}.next()
 	})
-
-	// Start HTTP server.
 	logInfo("Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
@@ -50,27 +59,31 @@ func main() {
 }
 
 type config struct {
-	project         string
-	location        string
-	wantHookID      string
-	runnerImageURL  string
-	jobTimeout      time.Duration
-	jobCpu          string
-	jobMemory       string
-	tokenSecretName string // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
+	project           string
+	location          string
+	wantHookID        string
+	runnerImageURL    string
+	jobID             string
+	jobTimeout        time.Duration
+	jobCpu            string
+	jobMemory         string
+	tokenSecretName   string // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
+	repositoryHtmlURL string
 }
 
 func newConfig() (config, error) {
 	fmt.Printf("ENV VARS:\n%q\n", os.Environ())
 	c := config{
-		wantHookID:      os.Getenv(hookIDEnvVar),
-		runnerImageURL:  defaultRunnerImageURL,
-		project:         "cr-runner-jasonco", // TODO
-		location:        "us-central1",       // TODO
-		jobTimeout:      defaultJobTimeout,
-		jobCpu:          defaultJobCpu,    // TODO
-		jobMemory:       defaultJobMemory, // TODO
-		tokenSecretName: defaultSecretName,
+		wantHookID:        os.Getenv(hookIDEnvVar),
+		jobID:             "github-runner-" + jobVersion,
+		runnerImageURL:    defaultRunnerImageURL,
+		project:           "cr-runner-jasonco", // TODO
+		location:          "us-central1",       // TODO
+		jobTimeout:        defaultJobTimeout,
+		jobCpu:            defaultJobCpu,    // TODO
+		jobMemory:         defaultJobMemory, // TODO
+		tokenSecretName:   defaultSecretName,
+		repositoryHtmlURL: "https://github.com/squee1945/self-hosted-runner", // TODO
 	}
 	if sn, ok := os.LookupEnv(gitHubTokenSecretEnvVar); ok {
 		c.tokenSecretName = sn

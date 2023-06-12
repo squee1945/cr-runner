@@ -1,20 +1,81 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"strconv"
 
 	"cloud.google.com/go/run/apiv2/runpb"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	run "cloud.google.com/go/run/apiv2"
 )
 
 type cloudRunJob struct {
 	config config
-	ev     *event
 }
 
-func (j *cloudRunJob) jobID() string {
-	return "jobid-" + strconv.Itoa(j.ev.WorkflowJob.ID)
+// func (j *cloudRunJob) jobID() string {
+// 	return "jobid-" + strconv.Itoa(j.ev.WorkflowJob.ID)
+// }
+
+func (j *cloudRunJob) ensureJob(ctx context.Context) error {
+	c, err := run.NewJobsClient(ctx)
+	if err != nil {
+		return fmt.Errorf("creating Cloud Run client: %v", err)
+	}
+	defer c.Close()
+
+	// crJob := cloudRunJob{ev: ev, config: h.config}
+	req, err := j.createJobRequest()
+	if err != nil {
+		return fmt.Errorf("creating job request: %v", err)
+	}
+
+	op, err := c.CreateJob(ctx, req)
+	if err != nil {
+		// TODO: maybe the uniqueness check fails here.
+		return fmt.Errorf("creating job: %v", err)
+	}
+
+	resp, err := op.Wait(ctx)
+	if err != nil {
+		// TODO: if something else has already created this job, it's fine.
+		return fmt.Errorf("waiting for job operation: %v", err)
+	}
+
+	logInfo("Job creation response for %q: %#v", j.config.jobID, resp)
+	return nil
+}
+
+func (j *cloudRunJob) runJob(ctx context.Context, ev *event) error {
+	// This snippet has been automatically generated and should be regarded as a code template only.
+	// It will require modifications to work:
+	// - It may require correct/in-range values for request initialization.
+	// - It may require specifying regional endpoints when creating the service client as shown in:
+	//   https://pkg.go.dev/cloud.google.com/go#hdr-Client_Options
+	c, err := run.NewJobsClient(ctx)
+	if err != nil {
+		return fmt.Errorf("creating Cloud Run client: %v", err)
+	}
+	defer c.Close()
+
+	req, err := j.runJobRequest(ev)
+	if err != nil {
+		return fmt.Errorf("creating job request: %v", err)
+	}
+
+	op, err := c.RunJob(ctx, req)
+	if err != nil {
+		return fmt.Errorf("running job: %v", err)
+	}
+
+	resp, err := op.Wait(ctx)
+	if err != nil {
+		return fmt.Errorf("waiting for job operation: %v", err)
+	}
+
+	logInfo("Job run response for %q: %#v", j.config.jobID, resp)
+	return nil
 }
 
 func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
@@ -22,7 +83,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 		// TODO: Fill request struct fields.
 		// See https://pkg.go.dev/cloud.google.com/go/run/apiv2/runpb#CreateJobRequest.
 		Parent: fmt.Sprintf("projects/%s/locations/%s", j.config.project, j.config.location),
-		JobId:  j.jobID(),
+		JobId:  j.config.jobID,
 		Job: &runpb.Job{
 			// Labels map[string]string, // TODO
 			// Annotations map[string]string // TODO
@@ -40,7 +101,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							// Command []string
 							Args: []string{
 								"./config.sh",
-								"--url", j.ev.Repository.HtmlURL,
+								"--url", j.config.repositoryHtmlURL,
 								"--token", "$" + gitHubTokenSecretEnvVar,
 								"--ephemeral",
 								"--disableupdate",
@@ -90,4 +151,12 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 		},
 	}
 	return req, nil
+}
+
+func (j *cloudRunJob) runJobRequest(ev *event) (*runpb.RunJobRequest, error) {
+	return &runpb.RunJobRequest{
+		// TODO: Fill request struct fields.
+		// See https://pkg.go.dev/cloud.google.com/go/run/apiv2/runpb#RunJobRequest.
+		Name: fmt.Sprintf("projects/%s/locations/%s/jobs/%s", j.config.project, j.config.location, j.config.jobID),
+	}, nil
 }
