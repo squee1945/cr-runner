@@ -24,7 +24,6 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 		Parent: fmt.Sprintf("projects/%s/locations/%s", j.config.project, j.config.location),
 		JobId:  j.jobID(),
 		Job: &runpb.Job{
-			Name: fmt.Sprintf("projects/%s/locations/%s/jobs/%s", j.config.project, j.config.location, j.jobID()),
 			// Labels map[string]string, // TODO
 			// Annotations map[string]string // TODO
 			// BinaryAuthorization *BinaryAuthorization
