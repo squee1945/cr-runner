@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -78,11 +78,11 @@ func newConfig(ctx context.Context) (config, error) {
 	if err != nil {
 		return config{}, fmt.Errorf("marshalling config: %v", err)
 	}
-	h := sha1.New()
+	h := md5.New()
 	if _, err := io.WriteString(h, string(b)); err != nil {
 		return config{}, fmt.Errorf("writing to hash: %v", err)
 	}
-	c.JobID += fmt.Sprintf("-%x", h.Sum(nil))[:11]
+	c.JobID += fmt.Sprintf("-%x", h.Sum(nil))
 
 	logInfo("Config: %#v", c)
 	return c, nil
@@ -93,7 +93,12 @@ func projectID(ctx context.Context) (string, error) {
 }
 
 func location(ctx context.Context) (string, error) {
-	return metadataQuery(ctx, "/instance/region")
+	full, err := metadataQuery(ctx, "/instance/region") // full is like "projects/659154930685/regions/us-central1"
+	if err != nil {
+		return "", nil
+	}
+	parts := strings.Split(full, "/")
+	return parts[len(parts)-1], nil
 }
 
 func metadataQuery(ctx context.Context, path string) (string, error) {
