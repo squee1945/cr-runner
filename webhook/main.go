@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -78,11 +78,11 @@ func newConfig(ctx context.Context) (config, error) {
 	if err != nil {
 		return config{}, fmt.Errorf("marshalling config: %v", err)
 	}
-	h := md5.New()
+	h := sha1.New()
 	if _, err := io.WriteString(h, string(b)); err != nil {
 		return config{}, fmt.Errorf("writing to hash: %v", err)
 	}
-	c.JobID += fmt.Sprintf("-%x", h.Sum(nil))
+	c.JobID += fmt.Sprintf("-%x", h.Sum(nil))[:11]
 
 	logInfo("Config: %#v", c)
 	return c, nil
