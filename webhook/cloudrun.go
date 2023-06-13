@@ -98,7 +98,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 							Args: []string{
 								"/bin/bash",
 								"-c",
-								fmt.Sprintf(`./config.sh --unattended --disableupdate --ephemeral --url %q --pat $%s --name $CLOUD_RUN_EXECUTION && ./run.sh`, j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+								fmt.Sprintf(`./config.sh --unattended --disableupdate --ephemeral --url %q --pat $%s --name $CLOUD_RUN_EXECUTION && ./run.sh && echo "--LOGS------" && ls -laR /home/runner/_diag`, j.config.RepositoryHtmlURL, tokenSecretEnvVar),
 							},
 							Env: []*runpb.EnvVar{
 								{
