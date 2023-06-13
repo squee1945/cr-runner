@@ -9,6 +9,7 @@ to GitHub on a long-polling HTTP connection. GitHub then sends the job to
 the runner. The runner is configured as --ephemeral meaning it will process
 only one job, then exit.
 
+
 ## Environment variables for the Cloud Run service
 
 The following env vars must be configured on the Cloud Run service:
@@ -25,6 +26,7 @@ Env var name | Required | Description | Example
 `$JOB_TIMEOUT` | Default `10m` | The allowed time for the action to execute.
 `$JOB_CPU` | Default `1` | The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
 `$JOB_MEMORY` | Default `1Gi` | The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
+
 
 ## Setting up the `$RUNNER_IMAGE_URL`
 
@@ -47,6 +49,7 @@ docker push ${LOCATION}-docker.pkg.dev/${PROJECT}/${REPOSITORY}/actions-runner
 
 Note the sha256 returned from the `docker push` and use this when setting the $RUNNER_IMAGE_URL env var, e.g., 
 `RUNNER_IMAGE_URL=us-central1-docker.pkg.dev/some-project/some-repo/actions-runner@sha256:ABCDEF123456`
+
 
 ## Setting up the `$GITHUB_TOKEN_SECRET`
 
@@ -83,6 +86,7 @@ It is possible to create the secret in a different project, in which case, use t
 ```
 GITHUB_TOKEN_SECRET=projects/[your-other-project]/secrets/gha-runner
 ```
+
 
 ## Building and deploying this application
 
