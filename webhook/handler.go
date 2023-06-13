@@ -1,6 +1,12 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/kr/pretty"
@@ -39,7 +45,12 @@ func (h handler) next() {
 	}
 	// TODO: Check signatures.
 
-	ev, err := parseEvent(h.r.Body)
+	body, err := io.ReadAll(h.r.Body)
+	if err != nil {
+		h.serverError("reading body: %v", err)
+	}
+
+	ev, err := parseEvent(body)
 	if err != nil {
 		h.serverError("parsing event: %v", err)
 		return
@@ -50,7 +61,7 @@ func (h handler) next() {
 		return
 	}
 
-	if err := h.validateSignature(); err != nil {
+	if err := h.validateSignature(body); err != nil {
 		h.clientError("verifying signature: %v", err)
 		return
 	}
@@ -64,15 +75,28 @@ func (h handler) next() {
 	}
 }
 
-func (h handler) validateSignature() error {
+func (h handler) validateSignature(body []byte) error {
 	logInfo("Headers:\n%v\n", h.r.Header)
 
-	if h.config.SignatureSecretName == "" {
+	if h.config.SignatureSecret == "" {
 		// Signature validation not configured.
 		return nil
 	}
 
-	logInfo("h.config.SignatureSecretName is set. TODO validate signature.")
+	messageMAC := h.r.Header.Get(sig256Header)
+	if messageMAC == "" {
+		return errors.New("$GITHUB_SIGNATURE_SECRET is set, but webhook message did not have signature. Did you configure the `Secret` in the GitHub webhook?")
+	}
+
+	mac := hmac.New(sha256.New, []byte(h.config.SignatureSecret))
+	mac.Write(body)
+	expectedMACBytes := mac.Sum(nil)
+	expectedMAC := "sha256=" + hex.EncodeToString(expectedMACBytes)
+
+	if messageMAC != expectedMAC {
+		return fmt.Errorf("signatures %q and %q do not match", messageMAC, expectedMAC)
+	}
+
 	return nil
 }
 

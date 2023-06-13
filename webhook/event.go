@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
 const (
@@ -30,14 +29,10 @@ const (
 	stepStatusWaiting    = "waiting"
 )
 
-func parseEvent(r io.Reader) (*event, error) {
-	b, err := io.ReadAll(r)
-	if err != nil {
-		return nil, fmt.Errorf("reading all: %v", err)
-	}
-	// logInfo("Raw event:\n%s\n", string(b))
+func parseEvent(body []byte) (*event, error) {
+	// logInfo("Raw event:\n%s\n", string(body))
 	var e event
-	if err := json.Unmarshal(b, &e); err != nil {
+	if err := json.Unmarshal(body, &e); err != nil {
 		return nil, fmt.Errorf("unmarshalling json: %v", err)
 	}
 	return &e, nil
