@@ -82,7 +82,7 @@ func newConfig(ctx context.Context) (config, error) {
 	if _, err := io.WriteString(h, string(b)); err != nil {
 		return config{}, fmt.Errorf("writing to hash: %v", err)
 	}
-	c.JobID += fmt.Sprintf("a-%x", h.Sum(nil)) // TODO: remove letter
+	c.JobID += fmt.Sprintf("b-%x", h.Sum(nil)) // TODO: remove letter
 
 	logInfo("Config: %#v", c)
 	return c, nil
