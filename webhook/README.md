@@ -130,8 +130,8 @@ $ openssl rand -hex 20
 Enter this value into the `Secret` field when setting up your GitHub webhook.
 
 To make this application verify the signatures, you must first place this same random string
-into Secret Manager, following a similar process to `$GITHUB_TOKEN_SECRET`. Name this secret
-something like `gha-signature`.
+into Secret Manager, following a similar process to `$GITHUB_TOKEN_SECRET`above. Name this
+secret something like `gha-signature`.
 
 Then when deploying your Cloud Run Service, set the environment variable to mention the name
 of the secret:
@@ -140,14 +140,12 @@ of the secret:
 GITHUB_SIGNATURE_SECRET=gha-signature
 ```
 
-Like the `$GITHUB_TOKEN_SECRET` setup, the Cloud Run service account must have the
+Like the `$GITHUB_TOKEN_SECRET` setup above, the Cloud Run service account must have the
 `Secret Manager Secret Accessor` role on the secret.
 
-Finally, you must deploy your Cloud Run Sevice to expose this secret as the
-`$GITHUB_TOKEN_SECRET` env var. The specifics are out of scope of this document because there
-may be many different ways that you are deploying your service. For a `gcloud run deploy`
-command, you need to add the flag:
+Finally, when deploying your Cloud Run Service, set `$GITHUB_TOKEN_SECRET` to the
+*name* of your secret (not the secret value!).
 
 ```
---update-secrets=GITHUB_SIGNATURE_SECRET=gha-signature:latest
+GITHUB_SIGNATURE_SECRET=gha-signature
 ```

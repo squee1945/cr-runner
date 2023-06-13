@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/kr/pretty"
 )
 
@@ -78,7 +81,7 @@ func (h handler) next() {
 func (h handler) validateSignature(body []byte) error {
 	logInfo("Headers:\n%v\n", h.r.Header)
 
-	if h.config.SignatureSecret == "" {
+	if h.config.SignatureSecretName == "" {
 		// Signature validation not configured.
 		return nil
 	}
@@ -88,7 +91,12 @@ func (h handler) validateSignature(body []byte) error {
 		return errors.New("$GITHUB_SIGNATURE_SECRET is set, but webhook message did not have signature. Did you configure the `Secret` in the GitHub webhook?")
 	}
 
-	mac := hmac.New(sha256.New, []byte(h.config.SignatureSecret))
+	signatureSecret, err := h.readSecret(h.config.SignatureSecretName)
+	if err != nil {
+		return fmt.Errorf("reading secret $GITHUB_SIGNATURE_SECRET secret: %v")
+	}
+
+	mac := hmac.New(sha256.New, signatureSecret)
 	mac.Write(body)
 	expectedMACBytes := mac.Sum(nil)
 	expectedMAC := "sha256=" + hex.EncodeToString(expectedMACBytes)
@@ -110,4 +118,30 @@ func (h handler) clientError(template string, args ...any) {
 	logWarn("Client error: "+template, args...)
 	h.w.WriteHeader(http.StatusBadRequest)
 	h.w.Write([]byte("Client error"))
+}
+
+func (h handler) readSecret(name string) ([]byte, error) {
+	ctx := h.r.Context()
+
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("creating client: %v", err)
+	}
+	defer client.Close()
+
+	if !strings.HasPrefix(name, "projects/") {
+		name = fmt.Sprintf("projects/%s/secrets/%s", h.config.Project, name)
+	}
+	parts := strings.Split(name, "/")
+	if len(parts) < 6 {
+		name += "/versions/latest"
+	}
+	logInfo("Using signature secret %q", name)
+
+	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{Name: name}
+	response, err := client.AccessSecretVersion(ctx, accessRequest)
+	if err != nil {
+		return nil, fmt.Errorf("accessing secret: %v", err)
+	}
+	return response.Payload.Data, nil
 }
