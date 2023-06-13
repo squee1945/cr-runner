@@ -12,15 +12,19 @@ only one job, then exit.
 ## Environment variables for the Cloud Run service
 
 The following env vars must be configured on the Cloud Run service:
-- `$REPOSITORY_URL` (required) The GitHub URL for the repository running actions (e.g., "https://github.com/joeschmoe/my-repo")
-- `$RUNNER_IMAGE_URL` (required) The Artifact Registry URL for the runner image (see below).
-- `$GITHUB_TOKEN_SECRET` (required) The name of a Secret Manager secret holding your GitHub Personal Access Token (see below). **DO NOT PUT THE TOKEN ITSELF IN THIS ENV VAR!**
-- `$HOOK_ID` (optional) The Hook ID for the webhook POSTing to the Cloud Run Service (e.g., "123456"); will only be validated if provided (see below).
-- `$GITHUB_SIGNATURE_SECRET` (optional) The name of a Secret Manager secret holding the shared secret to verify GitHub payload signatures; will only be validated if provided (see below).
-- `$JOB_ID` (default "gha-runner") The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
-- `$JOB_TIMEOUT` (default "10m") The allowed time for the action to execute.
-- `$JOB_CPU` (default "1") The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
-- `$JOB_MEMORY` (default "1Gi") The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
+
+
+Env var name | Required | Description | Example
+--- | --- | --- | ---
+`$REPOSITORY_URL` | Required | The GitHub URL for the repository running actions. | `https://github.com/joeschmoe/my-repo`
+`$RUNNER_IMAGE_URL` | Required | The Artifact Registry URL for the runner image (see below). | `us-central1-docker.pkg.dev/some-project/some-repo/actions-runner@sha256:ABCDEF123456`
+`$GITHUB_TOKEN_SECRET` | Required | The name of a Secret Manager secret holding your GitHub Personal Access Token (see below). **DO NOT PUT THE SECRET ITSELF IN THIS ENV VAR!** | `gha-runner`
+`$HOOK_ID` | Optional | The Hook ID for the webhook POSTing to the Cloud Run Service; will only be validated if provided (see below). | `123456`
+`$GITHUB_SIGNATURE_SECRET` | Optional | The name of a Secret Manager secret holding the shared secret to verify GitHub payload signatures; will only be validated if provided (see below). **DO NOT PUT THE SECRET ITSELF IN THIS ENV VAR!** | `gha-signature`
+`$JOB_ID` | Default `runner` | The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
+`$JOB_TIMEOUT` | Default `10m` | The allowed time for the action to execute.
+`$JOB_CPU` | Default `1` | The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
+`$JOB_MEMORY` | Default `1Gi` | The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
 
 ## Setting up the `$RUNNER_IMAGE_URL`
 
@@ -48,7 +52,7 @@ Note the sha256 returned from the `docker push` and use this when setting the $R
 
 This app uses a "classic" Git Hub personal access token for authenticating from Cloud Run to Git Hub.
 
-IMPORTANT: your personal access token must never be placed in an environment variable, or in any source code.
+**IMPORTANT!** Your personal access token must never be placed in an environment variable, or in any source code.
 
 To create a personal access token, navigate to https://github.com/settings/profile, then select 
 Developer Settings. Choose "Personal Access Token" -> "Tokens (classic)".
@@ -95,9 +99,9 @@ The service only needs minimial resources, and can scale to zero.
 First build and deploy this application to your Cloud Run service, giving you a run.app service URL 
 (e.g., `https://my-service-wa5vxuhyra-uc.a.run.app`).
 
-Nexxt set up the GitHub Actions for your repo at https://github.com/[user]/[repo]/actions.
+Next set up the GitHub Actions for your repo at https://github.com/[user]/[repo]/actions.
 
-IMPORTANT! You must edit the generated `.github/workflows/go.yml` file and set the
+**IMPORTANT!** You must edit the generated `.github/workflows/go.yml` file and set the
 `runs-on` field to `self-hosted`:
 
 ```

@@ -30,13 +30,13 @@ type config struct {
 	Project  string
 	Location string
 
-	// Salt is used to make the config hash unique; this field should not be directly used, it is exported to that it gets into the json encoding that is hashed.
-	Salt string
+	// JobVersion is used to ensure a unique hash for the JobID when the Cloud Run Job definition changes.
+	JobVersion string
 }
 
 func newConfig(ctx context.Context) (config, error) {
 	c := config{
-		Salt: createJobRequestVersion,
+		JobVersion: jobVersion,
 	}
 	if err := envconfig.Process(ctx, &c); err != nil {
 		return config{}, fmt.Errorf("processing envconfig: %v", err)

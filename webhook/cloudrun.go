@@ -15,13 +15,12 @@ import (
 )
 
 const (
-	// createJobRequestVersion is included in the config and can be used
-	// to force new Cloud Run Jobs to be created. The jobID includes a hash
-	// of the config, which is primarily environment variables. So if the
-	// CreateJobRequest itself changes (see cloudrun.go), you must
-	// update the createJobRequestVersion to generate a unique jobID which
-	// will cause a new Cloud Run Job to be created.
-	createJobRequestVersion = "v1"
+	// jobVersion is included in the config and can be used to force new Cloud
+	// Run Jobs to be created. The jobID includes a hash of the config, which
+	// is primarily environment variables. So if the CreateJobRequest itself
+	// changes (see cloudrun.go), you must update the jobVersion to generate a
+	// unique jobID which will cause a new Cloud Run Job to be created.
+	jobVersion = "v1"
 
 	tokenSecretEnvVar = "TOKEN_SECRET"
 )
