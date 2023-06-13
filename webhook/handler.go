@@ -38,19 +38,24 @@ func (h handler) next() {
 		h.clientError("bad method %v", h.r.Method)
 		return
 	}
-	if eh := h.r.Header.Get(eventHeader); eh != eventWorkFlowJobHeader {
-		h.clientError("unexpected event type %q", eh)
-		return
-	}
 	if eh := h.r.Header.Get(hookIDHeader); h.config.HookID != "" && eh != h.config.HookID {
 		h.clientError("incorrect %s got:%q want:%q", hookIDHeader, eh, h.config.HookID)
 		return
 	}
-	// TODO: Check signatures.
+	if eh := h.r.Header.Get(eventHeader); eh != eventWorkFlowJobHeader {
+		h.clientError("unexpected event type %q", eh)
+		return
+	}
 
 	body, err := io.ReadAll(h.r.Body)
 	if err != nil {
 		h.serverError("reading body: %v", err)
+	}
+	h.r.Body.Close()
+
+	if err := h.validateSignature(body); err != nil {
+		h.clientError("validating signature: %v", err)
+		return
 	}
 
 	ev, err := parseEvent(body)
@@ -61,11 +66,6 @@ func (h handler) next() {
 
 	if ev.Action != actionQueued {
 		logInfo("Event action %q not %q. Ignoring.", ev.Action, actionQueued)
-		return
-	}
-
-	if err := h.validateSignature(body); err != nil {
-		h.clientError("verifying signature: %v", err)
 		return
 	}
 
@@ -93,12 +93,13 @@ func (h handler) validateSignature(body []byte) error {
 
 	signatureSecret, err := h.readSecret(h.config.SignatureSecretName)
 	if err != nil {
-		return fmt.Errorf("reading secret $GITHUB_SIGNATURE_SECRET secret: %v")
+		return fmt.Errorf("reading secret $GITHUB_SIGNATURE_SECRET secret: %v", err)
 	}
 
 	mac := hmac.New(sha256.New, signatureSecret)
 	mac.Write(body)
 	expectedMACBytes := mac.Sum(nil)
+
 	expectedMAC := "sha256=" + hex.EncodeToString(expectedMACBytes)
 
 	if messageMAC != expectedMAC {
@@ -136,12 +137,13 @@ func (h handler) readSecret(name string) ([]byte, error) {
 	if len(parts) < 6 {
 		name += "/versions/latest"
 	}
-	logInfo("Using signature secret %q", name)
+	logInfo("Using signature secret name %q", name)
 
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{Name: name}
 	response, err := client.AccessSecretVersion(ctx, accessRequest)
 	if err != nil {
 		return nil, fmt.Errorf("accessing secret: %v", err)
 	}
+	logInfo("**** Signature value %q", string(response.Payload.Data)) // TODO - remove me.
 	return response.Payload.Data, nil
 }

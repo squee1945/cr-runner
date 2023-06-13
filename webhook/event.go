@@ -11,22 +11,22 @@ const (
 	actionQueued     = "queued"
 	actionWaiting    = "waiting"
 
-	jobStatusQueued     = "queued"
-	jobStatusInProgress = "in_progress"
-	jobStatusCompleted  = "completed"
-	jobStatusWaiting    = "waiting"
+	// jobStatusQueued     = "queued"
+	// jobStatusInProgress = "in_progress"
+	// jobStatusCompleted  = "completed"
+	// jobStatusWaiting    = "waiting"
 
-	stepConclusionFailure   = "failure"
-	stepConclusionSkipped   = "skipped"
-	stepConclusionSuccess   = "success"
-	stepConclusionCancelled = "cancelled"
-	stepConclusionNull      = "null"
+	// stepConclusionFailure   = "failure"
+	// stepConclusionSkipped   = "skipped"
+	// stepConclusionSuccess   = "success"
+	// stepConclusionCancelled = "cancelled"
+	// stepConclusionNull      = "null"
 
-	stepStatusCompleted  = "completed"
-	stepStatusInProgress = "in_progress"
-	stepStatusQueued     = "queued"
-	stepStatusPending    = "pending"
-	stepStatusWaiting    = "waiting"
+	// stepStatusCompleted  = "completed"
+	// stepStatusInProgress = "in_progress"
+	// stepStatusQueued     = "queued"
+	// stepStatusPending    = "pending"
+	// stepStatusWaiting    = "waiting"
 )
 
 func parseEvent(body []byte) (*event, error) {
