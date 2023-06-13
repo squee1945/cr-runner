@@ -12,16 +12,21 @@ import (
 )
 
 type config struct {
-	Port              string        `env:"PORT,default=8080"`
-	HookID            string        `env:"HOOK_ID"` // Will validate against GitHub header, if provided.
-	RunnerImageURL    string        `env:"RUNNER_IMAGE_URL,required"`
-	JobID             string        `env:"JOB_ID,default=runner"`
-	JobTimeout        time.Duration `env:"JOB_TIMEOUT,default=10m"`
-	JobCpu            string        `env:"JOB_CPU,default=1"`
-	JobMemory         string        `env:"JOB_MEMORY,default=1Gi"`
-	TokenSecretName   string        `env:"GITHUB_TOKEN_SECRET,required"` // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
-	RepositoryHtmlURL string        `env:"REPOSITORY_URL,required"`
+	// Required env vars.
+	RepositoryURL   string `env:"REPOSITORY_URL,required"`
+	RunnerImageURL  string `env:"RUNNER_IMAGE_URL,required"`
+	TokenSecretName string `env:"GITHUB_TOKEN_SECRET,required"` // "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
 
+	// Optional env vars.
+	HookID              string        `env:"HOOK_ID"`                 // Will validate against GitHub header, if provided.
+	SignatureSecretName string        `env:"GITHUB_SIGNATURE_SECRET"` // Will validate against GitHub signatures, if provided. "{secret_name}" for same project, "projects/{project}/secrets/{secret_name}" for different project.
+	JobID               string        `env:"JOB_ID,default=runner"`
+	JobTimeout          time.Duration `env:"JOB_TIMEOUT,default=10m"`
+	JobCpu              string        `env:"JOB_CPU,default=1"`
+	JobMemory           string        `env:"JOB_MEMORY,default=1Gi"`
+	Port                string        `env:"PORT,default=8080"`
+
+	// Pulled from metadata.
 	Project  string
 	Location string
 

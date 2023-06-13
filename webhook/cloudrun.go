@@ -63,14 +63,14 @@ func (j *cloudRunJob) ensureJob(ctx context.Context) error {
 	return nil
 }
 
-func (j *cloudRunJob) runJob(ctx context.Context, ev *event) error {
+func (j *cloudRunJob) runJob(ctx context.Context) error {
 	c, err := run.NewJobsClient(ctx)
 	if err != nil {
 		return fmt.Errorf("creating Cloud Run client: %v", err)
 	}
 	defer c.Close()
 
-	req, err := j.runJobRequest(ev)
+	req, err := j.runJobRequest()
 	if err != nil {
 		return fmt.Errorf("creating job request: %v", err)
 	}
@@ -107,7 +107,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 								"/bin/bash",
 								"-c",
 								// Note: some runner logs are found in /home/runner/_diag/*.log
-								fmt.Sprintf(`./config.sh --unattended --disableupdate --ephemeral --url %q --pat $%s --name $CLOUD_RUN_EXECUTION && ./run.sh`, j.config.RepositoryHtmlURL, tokenSecretEnvVar),
+								fmt.Sprintf(`./config.sh --unattended --disableupdate --ephemeral --url %q --pat $%s --name $CLOUD_RUN_EXECUTION && ./run.sh`, j.config.RepositoryURL, tokenSecretEnvVar),
 							},
 							Env: []*runpb.EnvVar{
 								{
@@ -139,7 +139,7 @@ func (j *cloudRunJob) createJobRequest() (*runpb.CreateJobRequest, error) {
 	return req, nil
 }
 
-func (j *cloudRunJob) runJobRequest(ev *event) (*runpb.RunJobRequest, error) {
+func (j *cloudRunJob) runJobRequest() (*runpb.RunJobRequest, error) {
 	return &runpb.RunJobRequest{
 		Name: fmt.Sprintf("projects/%s/locations/%s/jobs/%s", j.config.Project, j.config.Location, j.config.JobID),
 	}, nil

@@ -50,14 +50,30 @@ func (h handler) next() {
 		return
 	}
 
+	if err := h.validateSignature(); err != nil {
+		h.clientError("verifying signature: %v", err)
+		return
+	}
+
 	logInfo("Processing event:\n%s\n", pretty.Sprint(ev))
-	// logInfo("Headers:\n%v\n", h.r.Header)
 
 	crJob := cloudRunJob{config: h.config}
-	if err := crJob.runJob(h.r.Context(), ev); err != nil {
+	if err := crJob.runJob(h.r.Context()); err != nil {
 		h.serverError("running job %q: %v", h.config.JobID, err)
 		return
 	}
+}
+
+func (h handler) validateSignature() error {
+	logInfo("Headers:\n%v\n", h.r.Header)
+
+	if h.config.SignatureSecretName == "" {
+		// Signature validation not configured.
+		return nil
+	}
+
+	logInfo("h.config.SignatureSecretName is set. TODO validate signature.")
+	return nil
 }
 
 func (h handler) serverError(template string, args ...any) {

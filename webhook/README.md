@@ -12,14 +12,15 @@ only one job, then exit.
 ## Environment variables for the Cloud Run service
 
 The following env vars must be configured on the Cloud Run service:
-- `$RUNNER_IMAGE_URL` - The Artifact Registry URL for the runner image (see below).
-- `$GITHUB_TOKEN_SECRET` - The name of a Secret Manager secret holding your GitHub Personal Access Token (see below). **DO NOT PUT THE TOKEN ITSELF IN THIS ENV VAR!**
-- `$REPOSITORY_URL` - The GitHub URL for the repository running actions (e.g., "https://github.com/joeschmoe/my-repo")
-- `$HOOK_ID` - The Hook ID for the webhook POSTing to the Cloud Run Service (e.g., "123456"); will only be validated if provided (see below).
-- `$JOB_ID` (default "gha-runner") - The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
-- `$JOB_TIMEOUT` (default "10m") - The allowed time for the action to execute.
-- `$JOB_CPU` (default "1") - The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
-- `$JOB_MEMORY` (default "1Gi") - The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
+- `$REPOSITORY_URL` (required) The GitHub URL for the repository running actions (e.g., "https://github.com/joeschmoe/my-repo")
+- `$RUNNER_IMAGE_URL` (required) The Artifact Registry URL for the runner image (see below).
+- `$GITHUB_TOKEN_SECRET` (required) The name of a Secret Manager secret holding your GitHub Personal Access Token (see below). **DO NOT PUT THE TOKEN ITSELF IN THIS ENV VAR!**
+- `$HOOK_ID` (optional) The Hook ID for the webhook POSTing to the Cloud Run Service (e.g., "123456"); will only be validated if provided (see below).
+- `$GITHUB_SIGNATURE_SECRET` (optional) The name of a Secret Manager secret holding the shared secret to verify GitHub payload signatures; will only be validated if provided (see below).
+- `$JOB_ID` (default "gha-runner") The name of the Cloud Run job. If you change the definition of the Job in the code, you must update this value to something unique.
+- `$JOB_TIMEOUT` (default "10m") The allowed time for the action to execute.
+- `$JOB_CPU` (default "1") The CPUs allocated for the job. See https://cloud.google.com/run/docs/configuring/cpu
+- `$JOB_MEMORY` (default "1Gi") The RAM allocated for the job. See https://cloud.google.com/run/docs/configuring/memory-limits
 
 ## Setting up the `$RUNNER_IMAGE_URL`
 
@@ -108,10 +109,45 @@ Select Webhooks, and create a new webhook:
 
 - **Payload URL** Your run.app URL from above.
 - **Content type** Choose `application/json`.
-- **Secret** Not yet supported by this app. **TODO** Support secrets.
+- **Secret** (optional) Used for payload verification (see below).
 - **Which events would you like to trigger this webhook?** "Let me select individual events." "Workflow jobs"
 
 Leave everything else as defaults.
 
 The HookID is an integer that will appear in the URL and you can use this to configure your `$HOOK_ID`
 environment variable (will require another Cloud Run deployment; hook ID validation is optional).
+
+
+### Setting up signatures with `$GITHUB_SIGNATURE_SECRET`
+
+When setting up the GitHub webhook, you can set up a `Secret` which will generate signatures on the
+webhook payload. You can generate a secret value as any sufficiently long random string, for example:
+
+```
+$ openssl rand -hex 20
+```
+
+Enter this value into the `Secret` field when setting up your GitHub webhook.
+
+To make this application verify the signatures, you must first place this same random string
+into Secret Manager, following a similar process to `$GITHUB_TOKEN_SECRET`. Name this secret
+something like `gha-signature`.
+
+Then when deploying your Cloud Run Service, set the environment variable to mention the name
+of the secret:
+
+```
+GITHUB_SIGNATURE_SECRET=gha-signature
+```
+
+Like the `$GITHUB_TOKEN_SECRET` setup, the Cloud Run service account must have the
+`Secret Manager Secret Accessor` role on the secret.
+
+Finally, you must deploy your Cloud Run Sevice to expose this secret as the
+`$GITHUB_TOKEN_SECRET` env var. The specifics are out of scope of this document because there
+may be many different ways that you are deploying your service. For a `gcloud run deploy`
+command, you need to add the flag:
+
+```
+--update-secrets=GITHUB_SIGNATURE_SECRET=gha-signature:latest
+```
