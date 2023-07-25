@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	actionCompleted  = "completed"
-	actionInProgress = "in_progress"
-	actionQueued     = "queued"
-	actionWaiting    = "waiting"
+	// actionCompleted  = "completed"
+	// actionInProgress = "in_progress"
+	actionQueued = "queued"
+	// actionWaiting    = "waiting"
 
 	// jobStatusQueued     = "queued"
 	// jobStatusInProgress = "in_progress"
