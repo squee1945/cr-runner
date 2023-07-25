@@ -106,7 +106,7 @@ func (h *handler) handleAppInstallation(ev *event) {
 		return
 	}
 
-	logInfo("Received installation event: %v", *ev)
+	logInfo("Received installation event: %#v", *ev)
 }
 
 func (h handler) validateSignature(body []byte) error {
