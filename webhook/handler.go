@@ -25,7 +25,15 @@ const (
 	// targetTypeHeader = "X-Github-Hook-Installation-Target-Type" // X-Github-Hook-Installation-Target-Type: repository
 	// sigHeader        = "X-Hub-Signature"
 
-	eventWorkFlowJobHeader = "workflow_job"
+	eventWorkFlowJob     = "workflow_job"
+	eventAppInstallation = "installation"
+)
+
+var (
+	validEvents = map[string]bool{
+		eventWorkFlowJob:     true,
+		eventAppInstallation: true,
+	}
 )
 
 type handler struct {
@@ -43,7 +51,9 @@ func (h handler) next() {
 		h.clientError("incorrect %s got:%q want:%q", hookIDHeader, eh, h.config.HookID)
 		return
 	}
-	if eh := h.r.Header.Get(eventHeader); eh != eventWorkFlowJobHeader {
+
+	eh := h.r.Header.Get(eventHeader)
+	if !validEvents[eh] {
 		h.clientError("unexpected event type %q", eh)
 		return
 	}
@@ -65,6 +75,17 @@ func (h handler) next() {
 		return
 	}
 
+	switch eh {
+	case eventWorkFlowJob:
+		h.handleWorkFlowJob(ev)
+	case eventAppInstallation:
+		h.handleAppInstallation(ev)
+	default:
+		h.serverError("Unhandled event: %q", eh)
+	}
+}
+
+func (h *handler) handleWorkFlowJob(ev *event) {
 	if ev.Action != actionQueued {
 		logInfo("Event action %q not %q. Ignoring.", ev.Action, actionQueued)
 		return
@@ -77,6 +98,15 @@ func (h handler) next() {
 		h.serverError("running job %q: %v", h.config.JobID, err)
 		return
 	}
+}
+
+func (h *handler) handleAppInstallation(ev *event) {
+	if ev.Action != actionCreated {
+		logInfo("Event action %q not %q. Ignoring.", ev.Action, actionCreated)
+		return
+	}
+
+	logInfo("Received installation event: %v", *ev)
 }
 
 func (h handler) validateSignature(body []byte) error {

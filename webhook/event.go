@@ -8,7 +8,8 @@ import (
 const (
 	// actionCompleted  = "completed"
 	// actionInProgress = "in_progress"
-	actionQueued = "queued"
+	actionQueued  = "queued"
+	actionCreated = "created"
 	// actionWaiting    = "waiting"
 
 	// jobStatusQueued     = "queued"
@@ -42,11 +43,98 @@ type event struct {
 	Action       string            `json:"action"`
 	Sender       gitHubUser        `json:"sender"`
 	Repository   eventRepository   `json:"repository"`
+	Repositories []eventRepository `json:"repositories"`
 	Organization eventOrganization `json:"organization"`
 	WorkflowJob  eventWorkflowJob  `json:"workflow_job"`
+	Installation eventInstallation `json:"installation"`
 	// Deployment   eventDeployment   `json:"deployment"`
-	// Installation eventInstallation `json:"installation"`
 }
+
+/*
+  App Installation event:
+
+{
+  "action": "created",
+  "installation": {
+    "id": 40041419,
+    "account": {
+      "login": "squee1945",
+      "id": 1146523,
+      "node_id": "MDQ6VXNlcjExNDY1MjM=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1146523?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/squee1945",
+      "html_url": "https://github.com/squee1945",
+      "followers_url": "https://api.github.com/users/squee1945/followers",
+      "following_url": "https://api.github.com/users/squee1945/following{/other_user}",
+      "gists_url": "https://api.github.com/users/squee1945/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/squee1945/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/squee1945/subscriptions",
+      "organizations_url": "https://api.github.com/users/squee1945/orgs",
+      "repos_url": "https://api.github.com/users/squee1945/repos",
+      "events_url": "https://api.github.com/users/squee1945/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/squee1945/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "repository_selection": "selected",
+    "access_tokens_url": "https://api.github.com/app/installations/40041419/access_tokens",
+    "repositories_url": "https://api.github.com/installation/repositories",
+    "html_url": "https://github.com/settings/installations/40041419",
+    "app_id": 366691,
+    "app_slug": "actions-runner-experiment",
+    "target_id": 1146523,
+    "target_type": "User",
+    "permissions": {
+      "actions": "write",
+      "metadata": "read",
+      "administration": "write"
+    },
+    "events": [
+      "workflow_job"
+    ],
+    "created_at": "2023-07-25T15:29:55.000-07:00",
+    "updated_at": "2023-07-25T15:29:55.000-07:00",
+    "single_file_name": null,
+    "has_multiple_single_files": false,
+    "single_file_paths": [
+
+    ],
+    "suspended_by": null,
+    "suspended_at": null
+  },
+  "repositories": [
+    {
+      "id": 652279005,
+      "node_id": "R_kgDOJuD83Q",
+      "name": "self-hosted-runner",
+      "full_name": "squee1945/self-hosted-runner",
+      "private": false
+    }
+  ],
+  "requester": null,
+  "sender": {
+    "login": "squee1945",
+    "id": 1146523,
+    "node_id": "MDQ6VXNlcjExNDY1MjM=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1146523?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/squee1945",
+    "html_url": "https://github.com/squee1945",
+    "followers_url": "https://api.github.com/users/squee1945/followers",
+    "following_url": "https://api.github.com/users/squee1945/following{/other_user}",
+    "gists_url": "https://api.github.com/users/squee1945/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/squee1945/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/squee1945/subscriptions",
+    "organizations_url": "https://api.github.com/users/squee1945/orgs",
+    "repos_url": "https://api.github.com/users/squee1945/repos",
+    "events_url": "https://api.github.com/users/squee1945/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/squee1945/received_events",
+    "type": "User",
+    "site_admin": false
+  }
+}
+*/
 
 // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository
 /*
@@ -446,3 +534,66 @@ type gitHubUser struct {
   }
 }
 */
+
+/*
+	"installation": {
+	  "id": 40041419,
+	  "account": {
+	    "login": "squee1945",
+	    "id": 1146523,
+	    "node_id": "MDQ6VXNlcjExNDY1MjM=",
+	    "avatar_url": "https://avatars.githubusercontent.com/u/1146523?v=4",
+	    "gravatar_id": "",
+	    "url": "https://api.github.com/users/squee1945",
+	    "html_url": "https://github.com/squee1945",
+	    "followers_url": "https://api.github.com/users/squee1945/followers",
+	    "following_url": "https://api.github.com/users/squee1945/following{/other_user}",
+	    "gists_url": "https://api.github.com/users/squee1945/gists{/gist_id}",
+	    "starred_url": "https://api.github.com/users/squee1945/starred{/owner}{/repo}",
+	    "subscriptions_url": "https://api.github.com/users/squee1945/subscriptions",
+	    "organizations_url": "https://api.github.com/users/squee1945/orgs",
+	    "repos_url": "https://api.github.com/users/squee1945/repos",
+	    "events_url": "https://api.github.com/users/squee1945/events{/privacy}",
+	    "received_events_url": "https://api.github.com/users/squee1945/received_events",
+	    "type": "User",
+	    "site_admin": false
+	  },
+	  "repository_selection": "selected",
+	  "access_tokens_url": "https://api.github.com/app/installations/40041419/access_tokens",
+	  "repositories_url": "https://api.github.com/installation/repositories",
+	  "html_url": "https://github.com/settings/installations/40041419",
+	  "app_id": 366691,
+	  "app_slug": "actions-runner-experiment",
+	  "target_id": 1146523,
+	  "target_type": "User",
+	  "permissions": {
+	    "actions": "write",
+	    "metadata": "read",
+	    "administration": "write"
+	  },
+	  "events": [
+	    "workflow_job"
+	  ],
+	  "created_at": "2023-07-25T15:29:55.000-07:00",
+	  "updated_at": "2023-07-25T15:29:55.000-07:00",
+	  "single_file_name": null,
+	  "has_multiple_single_files": false,
+	  "single_file_paths": [
+
+	  ],
+	  "suspended_by": null,
+	  "suspended_at": null
+	},
+*/
+type eventInstallation struct {
+	ID                  int64      `json:"id"`
+	Account             gitHubUser `json:"account"`
+	RepositorySelection string     `json:"repository_selection"`
+	AccessTokensURL     string     `json:"https://api.github.com/app/installations/40041419/access_tokens"`
+	RepositoriesURL     string     `json:"repositories_url"`
+	HTMLURL             string     `json:"html_url"`
+	AppID               int64      `json:"app_id"`
+	AppSlug             string     `json:"app_slug"`
+	TargetID            int64      `json:"target_id"`
+	TargetType          string     `json:"target_type"`
+}
