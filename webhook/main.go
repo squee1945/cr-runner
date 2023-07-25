@@ -23,9 +23,9 @@ func main() {
 	}
 
 	// Start HTTP server.
-	http.HandleFunc("/app/callback", func(w http.ResponseWriter, r *http.Request) {
-		apphandler{w: w, r: r, config: config}.next()
-	})
+	// http.HandleFunc("/app/callback", func(w http.ResponseWriter, r *http.Request) {
+	// 	apphandler{w: w, r: r, config: config}.next()
+	// })
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handler{w: w, r: r, config: config}.next()
 	})
