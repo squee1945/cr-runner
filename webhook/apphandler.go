@@ -45,7 +45,7 @@ func (h apphandler) next() {
 
 	// TODO: Validate signature
 
-	logInfo("POST body: %s", string(body))
+	// logInfo("POST body: %s", string(body))
 }
 
 func (h apphandler) serverError(template string, args ...any) {
