@@ -47,7 +47,7 @@ func (h apphandler) next() {
 	}
 
 	url := fmt.Sprintf("https://api.github.com/app/installations/%s/access_tokens", installationID)
-	req, err := http.NewRequest(url, http.MethodPost, nil)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		h.serverError("creating http request: %v", err)
 		return
@@ -107,7 +107,8 @@ func (h apphandler) serverError(template string, args ...any) {
 }
 
 func (h apphandler) clientError(template string, args ...any) {
-	logWarn("Client error: "+template, args...)
+	msg := "Client error: " + fmt.Sprintf(template, args...)
+	logWarn(msg)
 	h.w.WriteHeader(http.StatusBadRequest)
-	h.w.Write([]byte("Client error"))
+	h.w.Write([]byte(msg))
 }
