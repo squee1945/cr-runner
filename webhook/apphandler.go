@@ -45,6 +45,7 @@ func (h apphandler) next() {
 		h.serverError("generating JWT: %v", err)
 		return
 	}
+	logInfo("JWT: %q", jwt)
 
 	url := fmt.Sprintf("https://api.github.com/app/installations/%s/access_tokens", installationID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -53,7 +54,7 @@ func (h apphandler) next() {
 		return
 	}
 	req.Header.Add("Accept", "application/vnd.github+json")
-	req.Header.Add("Authorization", "Bearer: "+jwt)
+	req.Header.Add("Authorization", "Bearer "+jwt)
 	req.Header.Add("X-GitHub-Api-Version", "2022-11-28")
 
 	res, err := http.DefaultClient.Do(req)
