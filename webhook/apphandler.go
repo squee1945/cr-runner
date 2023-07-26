@@ -45,7 +45,6 @@ func (h apphandler) next() {
 		h.serverError("generating JWT: %v", err)
 		return
 	}
-	logInfo("JWT: %q", jwt)
 
 	url := fmt.Sprintf("https://api.github.com/app/installations/%s/access_tokens", installationID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
