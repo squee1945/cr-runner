@@ -5,6 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go/run v1.1.0
 	cloud.google.com/go/secretmanager v1.11.0
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/googleapis/gax-go/v2 v2.10.0
 	github.com/kr/pretty v0.3.1
 	github.com/sethvargo/go-envconfig v0.9.0

@@ -25,6 +25,7 @@ type config struct {
 	JobCpu              string        `env:"JOB_CPU,default=1"`
 	JobMemory           string        `env:"JOB_MEMORY,default=1Gi"`
 	Port                string        `env:"PORT,default=8080"`
+	AppClientSecretName string        `env:"GITHUB_APP_CLIENT_SECRET"`
 
 	// Pulled from metadata.
 	Project  string
