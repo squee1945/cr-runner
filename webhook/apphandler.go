@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -70,23 +72,32 @@ func (h apphandler) next() {
 }
 
 func (h apphandler) generateJWT(applicationID string) (string, error) {
-	if h.config.AppClientSecretName == "" {
-		return "", errors.New("missing GitHub App Client Secret, did you set $GITHUB_APP_CLIENT_SECRET https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys")
+	if h.config.AppPrivateKeyName == "" {
+		return "", errors.New("missing GitHub app private key, did you set $GITHUB_APP_PRIVATE_KEY https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys")
 	}
 
-	secret, err := readSecret(h.r.Context(), h.config, h.config.AppClientSecretName)
+	raw, err := readSecret(h.r.Context(), h.config, h.config.AppPrivateKeyName)
 	if err != nil {
-		return "", fmt.Errorf("reading client secret: %v", err)
+		return "", fmt.Errorf("reading private key pem: %v", err)
+	}
+	block, _ := pem.Decode(raw)
+	if block == nil {
+		return "", errors.New("no block found in pem")
+	}
+	pk, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("parsing private key: %v", err)
 	}
 
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"iat": now.Unix(),
+		"iat": now.Add(-1 * time.Minute).Unix(), // Guard against clock drift.
 		"exp": now.Add(jwtTimeout).Unix(),
 		"iss": applicationID,
+		"alg": "RS256",
 	})
 
-	return token.SignedString(secret)
+	return token.SignedString(pk)
 }
 
 func (h apphandler) serverError(template string, args ...any) {
