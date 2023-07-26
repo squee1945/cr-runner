@@ -589,7 +589,7 @@ type eventInstallation struct {
 	ID                  int64      `json:"id"`
 	Account             gitHubUser `json:"account"`
 	RepositorySelection string     `json:"repository_selection"`
-	AccessTokensURL     string     `json:"https://api.github.com/app/installations/40041419/access_tokens"`
+	AccessTokensURL     string     `json:"access_tokens_url"`
 	RepositoriesURL     string     `json:"repositories_url"`
 	HTMLURL             string     `json:"html_url"`
 	AppID               int64      `json:"app_id"`
