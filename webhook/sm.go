@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 )
 
-func readSecret(ctx context.Context, name string) ([]byte, error) {
+func readSecret(ctx context.Context, config config, name string) ([]byte, error) {
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("creating client: %v", err)
@@ -17,7 +17,7 @@ func readSecret(ctx context.Context, name string) ([]byte, error) {
 	defer client.Close()
 
 	if !strings.HasPrefix(name, "projects/") {
-		name = fmt.Sprintf("projects/%s/secrets/%s", h.config.Project, name)
+		name = fmt.Sprintf("projects/%s/secrets/%s", config.Project, name)
 	}
 	parts := strings.Split(name, "/")
 	if len(parts) < 6 {
@@ -31,5 +31,4 @@ func readSecret(ctx context.Context, name string) ([]byte, error) {
 		return nil, fmt.Errorf("accessing secret: %v", err)
 	}
 	return response.Payload.Data, nil
-
 }
