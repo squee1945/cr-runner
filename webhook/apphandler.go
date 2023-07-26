@@ -68,7 +68,8 @@ func (h apphandler) next() {
 		return
 	}
 
-	h.w.Write(token)
+	logInfo("Token: " + string(token))
+	h.w.Write([]byte("See logs"))
 }
 
 func (h apphandler) generateJWT(applicationID string) (string, error) {
