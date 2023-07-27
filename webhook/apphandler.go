@@ -1,15 +1,14 @@
 package main
 
 import (
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"strconv"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
@@ -28,43 +27,34 @@ func (h apphandler) next() {
 		return
 	}
 
-	installationID := h.r.URL.Query().Get("installation-id")
-	if installationID == "" {
-		h.clientError("missing installation-id")
+	repo := h.r.URL.Query().Get("repo")
+	if repo == "" {
+		h.clientError(`missing repo (e.g., "owner/repo")`)
 		return
 	}
+	// TODO: validate repo
 
-	applicationID := h.r.URL.Query().Get("application-id")
-	if applicationID == "" {
-		h.clientError("missing application-id")
-		return
-	}
-
-	jwt, err := h.generateJWT(applicationID)
+	installationID, err := h.parseIntParam("installation-id")
 	if err != nil {
-		h.serverError("generating JWT: %v", err)
+		h.clientError(err.Error())
+		return
+	}
+	applicationID, err := h.parseIntParam("application-id")
+	if err != nil {
+		h.clientError(err.Error())
 		return
 	}
 
-	url := fmt.Sprintf("https://api.github.com/app/installations/%s/access_tokens", installationID)
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	pk, err := h.privateKey()
 	if err != nil {
-		h.serverError("creating http request: %v", err)
-		return
-	}
-	req.Header.Add("Accept", "application/vnd.github+json")
-	req.Header.Add("Authorization", "Bearer "+jwt)
-	req.Header.Add("X-GitHub-Api-Version", "2022-11-28")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		h.serverError("calling access_tokens API (status %d): %v", res.StatusCode, err)
+		h.serverError("fetching private key: %v", err)
 		return
 	}
 
-	token, err := io.ReadAll(res.Body)
+	r := NewRegistration(applicationID, installationID, repo, pk)
+	token, err := r.Token(h.r.Context())
 	if err != nil {
-		h.serverError("reading access_tokens response body: %v", err)
+		h.serverError("generating registration token: %v", err)
 		return
 	}
 
@@ -72,33 +62,38 @@ func (h apphandler) next() {
 	h.w.Write([]byte("See logs"))
 }
 
-func (h apphandler) generateJWT(applicationID string) (string, error) {
+func (h apphandler) privateKey() (*rsa.PrivateKey, error) {
 	if h.config.AppPrivateKeyName == "" {
-		return "", errors.New("missing GitHub app private key, did you set $GITHUB_APP_PRIVATE_KEY https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys")
+		return nil, errors.New("missing GitHub app private key, did you set $GITHUB_APP_PRIVATE_KEY https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys")
 	}
-
 	raw, err := readSecret(h.r.Context(), h.config, h.config.AppPrivateKeyName)
 	if err != nil {
-		return "", fmt.Errorf("reading private key pem: %v", err)
+		return nil, fmt.Errorf("reading private key pem: %v", err)
 	}
 	block, _ := pem.Decode(raw)
 	if block == nil {
-		return "", errors.New("no block found in pem")
+		return nil, errors.New("no block found in pem")
 	}
 	pk, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		return "", fmt.Errorf("parsing private key: %v", err)
+		return nil, fmt.Errorf("parsing private key: %v", err)
 	}
+	return pk, nil
+}
 
-	now := time.Now()
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"iat": now.Add(-1 * time.Minute).Unix(), // Guard against clock drift.
-		"exp": now.Add(jwtTimeout).Unix(),
-		"iss": applicationID,
-		"alg": "RS256",
-	})
-
-	return token.SignedString(pk)
+func (h apphandler) parseIntParam(name string) (int64, error) {
+	s := h.r.URL.Query().Get(name)
+	if s == "" {
+		return 0, fmt.Errorf("%s is required", name)
+	}
+	i, err := strconv.ParseInt(s, 10)
+	if err != nil {
+		return 0, fmt.Errorf("%s must be integer: %v", name, err)
+	}
+	if i <= 0 {
+		return 0, fmt.Errorf("%s must be positive", name)
+	}
+	return i, nil
 }
 
 func (h apphandler) serverError(template string, args ...any) {
