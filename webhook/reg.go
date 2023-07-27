@@ -112,6 +112,7 @@ func (r Registration) appRegistrationToken(ctx context.Context, appAccessToken s
 	if err != nil {
 		return "", fmt.Errorf("reading registration-token response body: %v", err)
 	}
+	logInfo("Registration token response: " + string(tokenBytes))
 
 	type ghToken struct {
 		Token     string    `json:"token"`
