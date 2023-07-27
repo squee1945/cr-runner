@@ -75,6 +75,7 @@ func (r Registration) appAccessToken(ctx context.Context, jwt string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("reading access_tokens response body: %v", err)
 	}
+	logInfo("Access token response: " + string(tokenBytes))
 
 	type ghToken struct {
 		Token              string            `json:"token"`
