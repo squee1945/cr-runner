@@ -57,7 +57,7 @@ func (r Registration) generateJWT(ctx context.Context) (string, error) {
 }
 
 func (r Registration) appAccessToken(ctx context.Context, jwt string) (string, error) {
-	url := fmt.Sprintf("https://api.github.com/app/installations/%s/access_tokens", r.installationID)
+	url := fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", r.installationID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return "", fmt.Errorf("creating http request: %v", err)
